@@ -21,7 +21,7 @@ use crate::bls12_381::Scalar;
 use crate::{
     impl_add_binop_specify_output, impl_binops_additive, impl_binops_additive_specify_output,
     impl_binops_multiplicative, impl_binops_multiplicative_mixed, impl_sub_binop_specify_output,
-    new_curve_impl,
+    new_curve_impl
 };
 
 new_curve_impl!(
@@ -34,7 +34,24 @@ new_curve_impl!(
     (G1_GENERATOR_X, G1_GENERATOR_Y),
     G1_B,
     "bls12_381_g1",
+    false
 );
+
+impl group::GroupEncoding for G1Affine {
+    type Repr = G1ProjectiveCompressed;
+
+    fn from_bytes(bytes: &Self::Repr) -> CtOption<Self> {
+        todo!()
+    }
+
+    fn from_bytes_unchecked(bytes: &Self::Repr) -> CtOption<Self> {
+        todo!()
+    }
+
+    fn to_bytes(&self) -> Self::Repr {
+        todo!()
+    }
+}
 
 const G1_GENERATOR_X: Fp = Fp::from_raw_unchecked([
     0x5cb3_8790_fd53_0c16,

@@ -151,6 +151,7 @@ macro_rules! new_curve_impl {
     $generator:expr,
     $constant_b:expr,
     $curve_id:literal,
+    $default_group_encoding:expr
     ) => {
 
         macro_rules! impl_compressed {
@@ -187,6 +188,9 @@ macro_rules! new_curve_impl {
                     }
                 }
 
+                macro_rules! impl_cond {
+                    (false) => {};
+                    (true) => {
                 impl group::GroupEncoding for $name_affine {
                     type Repr = [< $name Compressed >];
 
@@ -239,6 +243,10 @@ macro_rules! new_curve_impl {
                         }
                     }
                 }
+                    }
+                }
+
+                impl_cond!($default_group_encoding);
 
                 impl GroupEncoding for $name {
                     type Repr = [< $name Compressed >];

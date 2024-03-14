@@ -34,6 +34,7 @@ new_curve_impl!(
     (G2_GENERATOR_X, G2_GENERATOR_Y),
     G2_B,
     "bls12_381_g2",
+    true
 );
 
 const G2_GENERATOR_X: Fp2 = Fp2 {
