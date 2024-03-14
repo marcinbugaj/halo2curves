@@ -21,8 +21,10 @@ use crate::bls12_381::Scalar;
 use crate::{
     impl_add_binop_specify_output, impl_binops_additive, impl_binops_additive_specify_output,
     impl_binops_multiplicative, impl_binops_multiplicative_mixed, impl_sub_binop_specify_output,
-    new_curve_impl
+    new_curve_impl,
 };
+
+use blst;
 
 new_curve_impl!(
     (pub),
@@ -41,15 +43,49 @@ impl group::GroupEncoding for G1Affine {
     type Repr = G1ProjectiveCompressed;
 
     fn from_bytes(bytes: &Self::Repr) -> CtOption<Self> {
-        todo!()
+        unsafe {
+            let mut p = *blst::blst_p1_affine_generator();
+            let result = blst::blst_p1_uncompress(&mut p, bytes.0.as_ptr());
+            let direct_conversion = G1Affine {
+                x: Fp(p.x.l),
+                y: Fp(p.y.l),
+            };
+            match result {
+                blst::BLST_ERROR::BLST_SUCCESS => {
+                    let affine = if blst::blst_p1_affine_is_inf(&p) {
+                        G1Affine::identity()
+                    } else {
+                        direct_conversion
+                    };
+                    CtOption::new(affine, Choice::from(1u8))
+                }
+                _ => CtOption::new(direct_conversion, Choice::from(0u8)),
+            }
+        }
     }
 
     fn from_bytes_unchecked(bytes: &Self::Repr) -> CtOption<Self> {
-        todo!()
+        Self::from_bytes(bytes)
     }
 
     fn to_bytes(&self) -> Self::Repr {
-        todo!()
+        unsafe {
+            let direct_conversion = blst::blst_p1_affine {
+                x: blst::blst_fp { l: self.x.0 },
+                y: blst::blst_fp { l: self.y.0 },
+            };
+            let p = if self.is_identity().into() {
+                blst::blst_p1_affine {
+                    x: blst::blst_fp { l: [0; 6] },
+                    y: blst::blst_fp { l: [0; 6] },
+                }
+            } else {
+                direct_conversion
+            };
+            let mut bytes = [0; G1Projective_COMPRESSED_SIZE];
+            blst::blst_p1_affine_compress(bytes.as_mut_ptr(), &p);
+            G1ProjectiveCompressed(bytes)
+        }
     }
 }
 
